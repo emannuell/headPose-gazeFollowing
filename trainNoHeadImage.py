@@ -33,7 +33,7 @@ from utils import get_paste_kernel, kernel_map
 log_dir = 'log/'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
-log_file = log_dir + 'noFaceImage02.log'
+log_file = log_dir + 'teste01.log'
 
 logging.basicConfig(level=logging.INFO,
                     format='%(levelname)s: %(message)s',
@@ -51,8 +51,9 @@ class GazeDataset(Dataset):
         self.training = training
 
         if training == 'train':
-            fileName = '../../dataset/data_new/train_dataset.txt'
-        else: fileName = '../../dataset/data_new/test_dataset.txt'
+            fileName = self.root_dir + 'train_dataset.txt'
+        else: 
+            fileName = self.root_dir + 'test_dataset.txt'
         df = pd.read_csv(fileName, header=None, sep=",", names=['image', 'imageCount', 'bbox0', 'bbox1', 'bbox2', 'bbox3', 'x_min', 'y_min', 'x_max', 'y_max', 'source', 'sourceName', 'y', 'p', 'r'])
         
         # head pose data normalization
@@ -83,15 +84,6 @@ class GazeDataset(Dataset):
         y_min = df.y_min.to_numpy().reshape((-1, 1))
         self.eyes = np.hstack([x_min, y_min]).reshape(1, -1, 1, 2)
 
-        
-        # print(self.eyes)
-        # self.bboxes = anns[self.training + '_bbox']
-        # self.gazes = anns[self.training + '_gaze']
-        # self.paths = anns[self.training + '_path']
-        # self.eyes = anns[self.training + '_eyes']
-        # self.meta = anns[self.training + '_meta']
-        # self.image_num = self.paths.shape[0]
-
         logging.info('%s contains %d images' % (fileName, self.image_num))
 
     def generate_data_field(self, eye_point):
@@ -118,6 +110,7 @@ class GazeDataset(Dataset):
         image_path = self.paths[idx][0][0]
         image_path = os.path.join(self.root_dir, image_path)
 
+        # Remover BBOX -    NÃO PRECISA MAIS! REMOVER DO DATASET TAMBÉM??
         box = self.bboxes[0, idx][0]
         eye = self.eyes[0, idx][0]
         headPose = self.headPose[0, idx][0]
@@ -251,12 +244,13 @@ def test(net, test_data_loader):
 
 
 def main():
-    train_set = GazeDataset(root_dir='../../dataset/data_new/',
+    datasetPath = '/home/emannuell/Documentos/mestrado/dataset/data_new/'
+    train_set = GazeDataset(root_dir=datasetPath,
                             training='train')
     train_data_loader = DataLoader(train_set, batch_size=10,
                                    shuffle=True, num_workers=4)
 
-    test_set = GazeDataset(root_dir='../../dataset/data_new/',
+    test_set = GazeDataset(root_dir=datasetPath,
                            training='test')
     test_data_loader = DataLoader(test_set, batch_size=2,
                                   shuffle=False, num_workers=4)
@@ -346,7 +340,7 @@ def main():
 
         epoch += 1
 
-        save_path = '../model/test04'
+        save_path = '../trainedModel/test01'
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         torch.save(net.state_dict(), save_path+'/epoch_{}_loss_{}.pkl'.format(epoch, loss.data))

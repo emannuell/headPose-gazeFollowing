@@ -1,0 +1,14 @@
+INFO: /home/emannuell/Documentos/mestrado/dataset/data_new/train_dataset.txt contains 103400 images
+INFO: /home/emannuell/Documentos/mestrado/dataset/data_new/test_dataset.txt contains 36605 images
+INFO: [tensor(0.6860, device='cuda:0') tensor(0.5366, device='cuda:0')
+ tensor(0.5366, device='cuda:0')] Adam [0.0001, 0.0001, 0.0001]
+INFO: [tensor(0.6865, device='cuda:0') tensor(0.3456, device='cuda:0')
+ tensor(0.3456, device='cuda:0')] Adam [0.0001, 0.0001, 0.0001]
+INFO: [tensor(0.6857, device='cuda:0') tensor(0.4383, device='cuda:0')
+ tensor(0.4383, device='cuda:0')] Adam [0.0001, 0.0001, 0.0001]
+INFO: [tensor(0.6866, device='cuda:0') tensor(0.3324, device='cuda:0')
+ tensor(0.3324, device='cuda:0')] Adam [0.0001, 0.0001, 0.0001]
+INFO: [tensor(0.6859, device='cuda:0') tensor(0.3693, device='cuda:0')
+ tensor(0.3693, device='cuda:0')] Adam [0.0001, 0.0001, 0.0001]
+INFO: [tensor(0.6857, device='cuda:0') tensor(0.2895, device='cuda:0')
+ tensor(0.2895, device='cuda:0')] Adam [0.0001, 0.0001, 0.0001]
