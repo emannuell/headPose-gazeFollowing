@@ -30,10 +30,10 @@ from utils import get_paste_kernel, kernel_map
 
 
 # log setting
-log_dir = 'output/00001/'
+log_dir = 'output/noStep01/'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
-log_file = log_dir + '00001.log'
+log_file = log_dir + 'noStep01.log'
 
 logging.basicConfig(level=logging.INFO,
                     format='%(levelname)s: %(message)s',
@@ -181,8 +181,7 @@ def test(net, test_data_loader):
         loss = heatmap_loss + m_angle_loss
 
 
-        total_loss.append([heatmap_loss.data,
-                          m_angle_loss.data, loss.data])
+        total_loss.append([heatmap_loss.data, m_angle_loss.data, loss.data])
         # logging.info('loss: %.5lf, %.5lf, %.5lf'%(heatmap_loss.data, m_angle_loss.data, loss.data))
 
         middle_output = direction.cpu().data.numpy()
@@ -236,7 +235,7 @@ def test(net, test_data_loader):
 
 def main():
     dataset_path = '/home/emannuell/Documentos/mestrado/dataset/data_new/'
-    output_path = 'output/00001'
+    output_path = 'output/noStep01'
     train_set = GazeDataset(root_dir=dataset_path,
                             training='train')
     train_data_loader = DataLoader(train_set, batch_size=10,
@@ -262,49 +261,37 @@ def main():
         exit()
 
     method = 'Adam'
-    # 0.0001
-    learning_rate = 0.00001
+    learning_rate = 0.0001
 
     optimizer_s1 = optim.Adam([{'params': net.module.head_pose_transform.parameters(), 
                                 'initial_lr': learning_rate},
                                {'params': net.module.eye_position_transform.parameters(), 
                                 'initial_lr': learning_rate},
                                {'params': net.module.fusion.parameters(), 
+                                'initial_lr': learning_rate},
+                                {'params': net.module.fpn_net.parameters(), 
                                 'initial_lr': learning_rate}],
-                               lr=learning_rate, weight_decay=0.0001)
-    optimizer_s2 = optim.Adam([{'params': net.module.fpn_net.parameters(),
-                                'initial_lr': learning_rate}],
-                               lr=learning_rate, weight_decay=0.0001)
-
-    optimizer_s3 = optim.Adam([{'params': net.parameters(), 'initial_lr': learning_rate}],
-                           lr=learning_rate*0.1, weight_decay=0.0001)
+                                lr=learning_rate, weight_decay=0.0001)
+    # optimizer_s1 = optim.Adam([{'params': net.parameters(), 
+    #                             'initial_lr': learning_rate}],
+    #                             lr=learning_rate, weight_decay=0.0001)
 
     lr_scheduler_s1 = optim.lr_scheduler.StepLR(optimizer_s1, step_size=5, gamma=0.1, last_epoch=-1)
-    lr_scheduler_s2 = optim.lr_scheduler.StepLR(optimizer_s2, step_size=5, gamma=0.1, last_epoch=-1)
-    lr_scheduler_s3 = optim.lr_scheduler.StepLR(optimizer_s3, step_size=5, gamma=0.1, last_epoch=-1)
 
 
-    max_epoch = 25
+    max_epoch = 30
 
     epoch = 0
-    while epoch < max_epoch:
-        if epoch == 0:
-            lr_scheduler = lr_scheduler_s1
-            optimizer = optimizer_s1
-        # 5
-        elif epoch == 5:
-            lr_scheduler = lr_scheduler_s2
-            optimizer = optimizer_s2
-        # 9
-        elif epoch == 9:
-            lr_scheduler = lr_scheduler_s3
-            optimizer = optimizer_s3
-        # optimizer.step()
-        lr_scheduler.step()
 
-        running_loss = []
-        ep_heatmap_loss = []
+    while epoch < max_epoch:
+        print('EPOCH => ', epoch)
+        lr_scheduler = lr_scheduler_s1
+        optimizer = optimizer_s1
+        
+        lr_scheduler.step()
         ep_m_angle_loss = []
+        ep_heatmap_loss = []
+        running_loss = []
         for i, data in tqdm(enumerate(train_data_loader)):
             image, gaze_field, eye_position, gt_position, gt_heatmap, head_pose = \
                 data['image'],  data['gaze_field'], data['eye_position'], data['gt_position'], data['gt_heatmap'], data['head_pose']
@@ -317,36 +304,26 @@ def main():
             heatmap_loss, m_angle_loss = F_loss(direction, predict_heatmap, eye_position, gt_position, gt_heatmap)
             ep_heatmap_loss.append(np.array(heatmap_loss.cpu().data))
             ep_m_angle_loss.append(np.array(m_angle_loss.cpu().data))
-
-            if epoch == 0:
-                loss = m_angle_loss
-            elif epoch >= 7 and epoch <= 14:
-                loss = heatmap_loss
-            else:
-                loss = m_angle_loss + heatmap_loss
+            loss = m_angle_loss + heatmap_loss
 
             loss.backward()
             optimizer.step()
 
-            running_loss.append([heatmap_loss.data,
-                                 m_angle_loss.data, loss.data])
+            running_loss.append([heatmap_loss.data, m_angle_loss.data, loss.data])
+            # logging.info('%s %s %s'%(str(np.mean(running_loss, axis=0)), method, str(lr_scheduler.get_lr())))
             # if i % 10 == 9:
             #     logging.info('%s %s %s'%(str(np.mean(running_loss, axis=0)), method, str(lr_scheduler.get_lr())))
             #     running_loss = []
 
         epoch += 1
         print('==== Training loss ====')
-        logging.info('Epoch: %s'%epoch)
-        logging.info('heatmap loss: %s'%str(np.mean(np.array(ep_heatmap_loss))))
-        logging.info('mean angle loss: %s'%str(np.mean(np.array(ep_m_angle_loss))))
-        logging.info('file: %s'%output_path+'/epoch_{}_loss_{}.pkl'.format(epoch, loss.data))
-
+        print('Heatmap loss: ', np.mean(np.array(ep_heatmap_loss)))
+        print('Mean angle loss: ', np.mean(np.array(ep_m_angle_loss)))
         if not os.path.exists(output_path):
             os.makedirs(output_path)
         print('Saving model to output path: ', output_path+'/epoch_{}_loss_{}.pkl'.format(epoch, loss.data))
         torch.save(net.state_dict(), output_path+'/epoch_{}_loss_{}.pkl'.format(epoch, loss.data))
         print('Starting model test')
-
         test(net, test_data_loader)
 
 
