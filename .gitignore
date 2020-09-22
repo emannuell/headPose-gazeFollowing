@@ -4,4 +4,4 @@ __pycache__/
 venv/
 log/
 output/
-headPose-gazeFollowing/epoch_15_loss_0.0558342523873.pkl
+model/epoch_15_loss_0.0558342523873.pkl
