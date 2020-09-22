@@ -2,3 +2,6 @@
 __pycache__/
 *.avi
 venv/
+log/
+output/
+headPose-gazeFollowing/epoch_15_loss_0.0558342523873.pkl
