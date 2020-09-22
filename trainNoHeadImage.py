@@ -30,10 +30,10 @@ from utils import get_paste_kernel, kernel_map
 
 
 # log setting
-log_dir = 'output/00001/'
+log_dir = 'output/convergeTest/'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
-log_file = log_dir + '00001.log'
+log_file = log_dir + '001.log'
 
 logging.basicConfig(level=logging.INFO,
                     format='%(levelname)s: %(message)s',
@@ -236,7 +236,7 @@ def test(net, test_data_loader):
 
 def main():
     dataset_path = '/home/emannuell/Documentos/mestrado/dataset/data_new/'
-    output_path = 'output/00001'
+    output_path = 'output/convergeTest'
     train_set = GazeDataset(root_dir=dataset_path,
                             training='train')
     train_data_loader = DataLoader(train_set, batch_size=10,
@@ -263,7 +263,7 @@ def main():
 
     method = 'Adam'
     # 0.0001
-    learning_rate = 0.00001
+    learning_rate = 0.001
 
     optimizer_s1 = optim.Adam([{'params': net.module.head_pose_transform.parameters(), 
                                 'initial_lr': learning_rate},
@@ -292,11 +292,11 @@ def main():
             lr_scheduler = lr_scheduler_s1
             optimizer = optimizer_s1
         # 5
-        elif epoch == 5:
+        elif epoch == 15:
             lr_scheduler = lr_scheduler_s2
             optimizer = optimizer_s2
         # 9
-        elif epoch == 9:
+        elif epoch == 20:
             lr_scheduler = lr_scheduler_s3
             optimizer = optimizer_s3
         # optimizer.step()
@@ -320,7 +320,7 @@ def main():
 
             if epoch == 0:
                 loss = m_angle_loss
-            elif epoch >= 7 and epoch <= 14:
+            elif epoch >= 15 and epoch <= 20:
                 loss = heatmap_loss
             else:
                 loss = m_angle_loss + heatmap_loss
@@ -345,9 +345,9 @@ def main():
             os.makedirs(output_path)
         print('Saving model to output path: ', output_path+'/epoch_{}_loss_{}.pkl'.format(epoch, loss.data))
         torch.save(net.state_dict(), output_path+'/epoch_{}_loss_{}.pkl'.format(epoch, loss.data))
-        print('Starting model test')
+        # print('Starting model test')
 
-        test(net, test_data_loader)
+        # test(net, test_data_loader)
 
 
 if __name__ == '__main__':

@@ -35,7 +35,7 @@ if not os.path.exists(log_dir):
 log_file = log_dir + 'test_headpose01.log'
 
 logging.basicConfig(level=logging.INFO,
-                    format='%(levelname)s: %(message)s',
+                    format='%(message)s',
                     filename=log_file,
                     filemode='w')
 console = logging.StreamHandler()
@@ -83,16 +83,6 @@ class GazeDataset(Dataset):
 
         logging.info('%s contains %d images' % (fileName, self.image_num))
 
-        # anns = loadmat(self.mat_file)
-        # self.bboxes = anns[self.training + '_bbox']
-        # self.gazes = anns[self.training + '_gaze']
-        # self.paths = anns[self.training + '_path']
-        # self.eyes = anns[self.training + '_eyes']
-        # self.meta = anns[self.training + '_meta']
-        # self.image_num = self.paths.shape[0]
-
-        # logging.info('%s contains %d images' % (self.mat_file, self.image_num))
-
     def generate_data_field(self, eye_point):
         """eye_point is (x, y) and between 0 and 1"""
         height, width = 224, 224
@@ -122,36 +112,13 @@ class GazeDataset(Dataset):
         # todo: process gaze differently for training or testing
         gaze = self.gazes[0, idx].mean(axis=0)
         headPose = self.headPose[0, idx][0]
-        # print(image_path)
         image = cv2.imread(image_path, cv2.IMREAD_COLOR)
 
         if random.random() > 0.5 and self.training == 'train':
             eye = [1.0 - eye[0], eye[1]]
             gaze = [1.0 - gaze[0], gaze[1]]
             image = cv2.flip(image, 1)
-            
-        # crop face
-        # x_c, y_c = eye
-        # x_0 = x_c - 0.15
-        # y_0 = y_c - 0.15
-        # x_1 = x_c + 0.15
-        # y_1 = y_c + 0.15
-        # if x_0 < 0:
-        #     x_0 = 0
-        # if y_0 < 0:
-        #     y_0 = 0
-        # if x_1 > 1:
-        #     x_1 = 1
-        # if y_1 > 1:
-        #     y_1 = 1
         h, w = image.shape[:2]
-        # face_image = image[int(y_0 * h):int(y_1 * h), int(x_0 * w):int(x_1 * w), :]
-        # process face_image for face net
-        # face_image = cv2.cvtColor(face_image, cv2.COLOR_BGR2RGB)
-        # face_image = Image.fromarray(face_image)
-        # face_image = data_transforms[self.training](face_image)
-        # process image for saliency net
-        #image = image_preprocess(image)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = Image.fromarray(image)
         image = data_transforms[self.training](image)
@@ -254,21 +221,17 @@ def test(net, test_data_loader):
             
             total_error.append([f_dist, m_angle, f_angle])
             info_list.append(list(f_point))
-    info_list = np.array(info_list)
-    np.savez('multi_scale_concat_prediction.npz', info_list=info_list)
+    # info_list = np.array(info_list)
+    # np.savez('multi_scale_concat_prediction.npz', info_list=info_list)
 
-    heatmaps = np.stack(heatmaps)
-    np.savez('multi_scale_concat_heatmaps.npz', heatmaps=heatmaps)
+    # heatmaps = np.stack(heatmaps)
+    # np.savez('multi_scale_concat_heatmaps.npz', heatmaps=heatmaps)
 
     logging.info('average loss : %s'%str(np.mean(np.array(total_loss), axis=0)))
     logging.info('average error [mean dist, angle, mean angle]: %s'%str(np.mean(np.array(total_error), axis=0)))
-    print('mean dist desvio padrao: ', np.std(np.array(total_error)[:, 0]))
-    print('angle desvio padrao: ', np.std(np.array(total_error)[:, 1]))
-    print('mean angle desvio padrao: ', np.std(np.array(total_error)[:, 2]))
-    
-    # net.train()
-    return 0.0
-
+    # print('mean dist desvio padrao: ', np.std(np.array(total_error)[:, 0]))
+    # print('angle desvio padrao: ', np.std(np.array(total_error)[:, 1]))
+    # print('mean angle desvio padrao: ', np.std(np.array(total_error)[:, 2]))
 
 def main():
 
