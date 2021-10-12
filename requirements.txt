@@ -1,5 +1,5 @@
 numpy==1.18.1
-opencv-python==3.4.2.16
+opencv-python==4.2.0.32
 dlib==19.19.0
 Pillow>=7.1.0
 sklearn==0.0
